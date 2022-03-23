@@ -1,37 +1,44 @@
+#include <cstdio>
 #include <cstring>
 #include <iostream>
+
 using namespace std;
-
-constexpr int MN = 8E4, M = 26;
-int top, tree[MN][M];
-bool isEnd[MN];
-
-int getNext() {
-    isEnd[++top] = 0;
-    memset(tree[top], 0, sizeof tree[top]);
-    return top;
-}
+constexpr int LEN = 8E4;
+uint8_t trie[LEN][26];
+bool isEnd[LEN];
+uint32_t top = 0;
 
 void insert(const string& s) {
-    int rt = 1;
+    uint32_t currNode = 1;
     for (char c : s) {
-        c -= 'a';
-        if (tree[rt][c])
-            rt = tree[rt][c];
-        else
-            rt = tree[rt][c] = getNext();
-    }
-    isEnd[rt] = 1;
-}
-
-int search(const string& s) {
-    uint32_t node = 1;
-    for (char c : s) {
-        if (!(node = tree[node][c - 'a'])) {
-            return node;
+        if (!(trie[currNode][c - 'a'])) {
+            currNode = trie[currNode][c - 'a'] = ++top;
+        } else {
+            currNode = trie[currNode][c - 'a'];
         }
     }
-    return node;
+    isEnd[currNode] = true;
+}
+
+void del(const string& s) {
+    uint32_t currNode = 1;
+
+    for (char c : s) {
+        if (!(currNode = trie[currNode][c - 'a'])) {
+            return;
+        }
+    }
+    isEnd[currNode] = false;
+}
+
+uint32_t search(const string& s) {
+    uint32_t currNode = 1;
+    for (char c : s) {
+        if (!(currNode = trie[currNode][c - 'a'])) {
+            return 0;
+        }
+    }
+    return currNode;
 }
 
 void test(int node) {
@@ -49,9 +56,14 @@ int main() {
     insert("abc");
     insert("abcd");
     test(search("a"));     // perfix
+    test(search("abc"));   // complete
     test(search("abcd"));  // complete
     test(search("acd"));   // no
     test(search("bs"));    // no
+
+    del("abc");
+    test(search("abc"));   // perfix
+    test(search("abcd"));  // complete
 
     return 0;
 }
