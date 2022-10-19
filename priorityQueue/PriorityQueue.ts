@@ -13,22 +13,26 @@ class PriorityQueue<T> {
     }
   }
 
-  private shiftDown(rootId: number) {
-    if (rootId >= this.heap.length) return;
+  private swap(i: number, j: number) {
+    const swp = this.heap[i]; this.heap[i] = this.heap[j]; this.heap[j] = swp;
+  }
 
-    let maxId = rootId;
-    if (rootId * 2 + 1 < this.heap.length && this.compare(this.heap[rootId * 2 + 1], this.heap[maxId]) < 0) maxId = rootId * 2 + 1;
-    if (rootId * 2 + 2 < this.heap.length && this.compare(this.heap[rootId * 2 + 2], this.heap[maxId]) < 0) maxId = rootId * 2 + 2;
-
-    if (maxId !== rootId) { const swp = this.heap[maxId]; this.heap[maxId] = this.heap[rootId]; this.heap[rootId] = swp; this.shiftDown(maxId); }
+  private shiftDown(id: number) {
+    while (id * 2 + 1 < this.heap.length) {
+      let childId = id * 2 + 1;
+      if (childId + 1 < this.heap.length && this.compare(this.heap[childId + 1], this.heap[childId]) < 0) childId++;
+      if (this.compare(this.heap[id], this.heap[childId]) <= 0) break;
+      this.swap(id, childId);
+      id = childId;
+    }
   }
 
   private shiftUp(id: number) {
-    if (id === 0) return;
-    const parentId = Math.floor((id - 1) / 2);
-    if (this.compare(this.heap[id], this.heap[parentId]) < 0) {
-      const swp = this.heap[id]; this.heap[id] = this.heap[parentId]; this.heap[parentId] = swp;
-      this.shiftUp(parentId);
+    let rootId = Math.floor((id - 1) / 2);
+    while (id > 0 && this.compare(this.heap[id], this.heap[rootId]) < 0) {
+      this.swap(id, rootId);
+      id = rootId;
+      rootId = Math.floor((id - 1) / 2);
     }
   }
 
@@ -37,17 +41,17 @@ class PriorityQueue<T> {
   }
 
   public enqueue(ele: T): PriorityQueue<T> {
-    this.heap.push(ele)
-    this.shiftUp(this.heap.length - 1);
+    this.shiftUp(this.heap.push(ele) - 1);
     return this;
   }
 
-  public dequeue(): T {
-    const ret = this.heap[0];
-    this.heap[0] = this.heap[this.heap.length - 1];
-    this.heap.pop();
-    this.shiftDown(0);
-    return ret;
+  public dequeue(): T | undefined {
+    if (this.heap.length !== 1) {
+      const ret = this.heap[0];
+      this.heap[0] = this.heap.pop() as T;
+      this.shiftDown(0);
+      return ret;
+    } else return this.heap.pop();
   }
   public empty(): boolean {
     return this.heap.length === 0;
@@ -62,7 +66,12 @@ const assert = (bool: boolean, msg: string) => {
 
 const judge = (queue: PriorityQueue<number>, arr: number[]) => {
   for (let i = 0; i < arr.length; i++) {
+    let peek = queue.peek();
+    if (peek !== arr[i]) {
+      debugger
+    }
     assert(queue.peek() === arr[i], `${queue.peek()} !== ${arr[i]}`);
+
     queue.dequeue();
   }
   console.log(`pass ${arr.length}`);
